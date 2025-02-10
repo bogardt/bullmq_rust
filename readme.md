@@ -10,6 +10,8 @@ This library is a modular **BullMQ-inspired** wrapper in **Rust**, allowing **qu
   ├── queue_service.rs      # Queue and job management
   ├── worker_service.rs     # Workers for job execution
   ├── job_model.rs          # Job model with advanced options
+  ├── log_service.rs        # Logging service for job events
+  ├── lib.rs                # Library module declarations
   ├── main.rs               # Application entry point
 ```
 
@@ -54,6 +56,7 @@ async fn main() {
         priority: Some(1),
         delay: Some(5),
         retries: Some(3),
+        expires_in: None,
         progress: Some(0),
     };
     
@@ -86,12 +89,12 @@ async fn main() {
 ```
 
 ## 🔍 Features
-✅ **Job addition and execution**
-✅ **Priority and delay management**
-✅ **Automatic retries on failure**
-✅ **Job count tracking**
-✅ **Job progress tracking**
-✅ **Simple integration with Redis**
+✅ **Job addition and execution**  
+✅ **Priority and delay management**  
+✅ **Automatic retries on failure**  
+✅ **Job count tracking**  
+✅ **Job progress tracking**  
+✅ **Simple integration with Redis**  
 
 ## 📜 License
 MIT
