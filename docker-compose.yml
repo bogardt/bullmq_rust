@@ -1,4 +1,5 @@
 services:
+  # Redis service
   redis:
     image: redis:latest
     container_name: redis
@@ -7,6 +8,7 @@ services:
     volumes:
       - redis-data:/data
 
+  # Application service
   app:
     build:
       context: .
