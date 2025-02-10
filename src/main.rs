@@ -6,6 +6,10 @@ use bullmq_rust::queue_service::QueueService;
 use bullmq_rust::worker_service::WorkerService;
 use bullmq_rust::job_model::JobData;
 
+/// The main entry point of the application.
+///
+/// This function initializes the configuration, queue service, and worker service.
+/// It adds a job to the queue and starts the worker to process jobs.
 #[tokio::main]
 async fn main() -> RedisResult<()> {
     let config = ConfigService::new();

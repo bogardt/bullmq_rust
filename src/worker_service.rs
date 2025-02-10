@@ -6,16 +6,32 @@ use chrono::Utc;
 use crate::queue_service::QueueService;
 use crate::job_model::JobData;
 
+/// Service responsible for managing workers that process jobs from a queue.
 pub struct WorkerService {
     queue_name: String,
     queue_service: Arc<QueueService>,
 }
 
 impl WorkerService {
+    /// Creates a new `WorkerService`.
+    ///
+    /// # Arguments
+    ///
+    /// * `queue_name` - The name of the queue to process jobs from.
+    /// * `queue_service` - An `Arc` wrapped `QueueService` instance.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of `WorkerService`.
     pub fn new(queue_name: String, queue_service: Arc<QueueService>) -> Self {
         Self { queue_name, queue_service }
     }
 
+    /// Starts the worker to process jobs from the queue.
+    ///
+    /// This function spawns a new asynchronous task that continuously fetches
+    /// and processes jobs from the queue. It updates job progress and handles
+    /// retries for failed jobs.
     pub async fn start(&self) {
         let queue_name = self.queue_name.clone();
         let queue_service = Arc::clone(&self.queue_service);
@@ -65,6 +81,10 @@ impl WorkerService {
         });
     }
 
+    /// Retries failed jobs from the failed queue.
+    ///
+    /// This function spawns a new asynchronous task that continuously fetches
+    /// and retries jobs from the failed queue.
     pub async fn retry_failed_jobs(&self) {
         let queue_name = format!("{}:failed", self.queue_name.clone());
         let queue_service = Arc::clone(&self.queue_service);

@@ -76,30 +76,5 @@ async fn main() {
 ```
 
 ### 3️⃣ Track Job Progress
-```rust
-use queue_service::QueueService;
-
-#[tokio::main]
-async fn main() {
-    let queue_service = QueueService::new("testQueue").unwrap();
-    
-    let progress = queue_service.get_job_progress("testQueue", "job_id").await.unwrap();
-    println!("Job progress: {}", progress);
-}
 ```
-
-## 🔍 Features
-✅ **Job addition and execution**  
-✅ **Priority and delay management**  
-✅ **Automatic retries on failure**  
-✅ **Job count tracking**  
-✅ **Job progress tracking**  
-✅ **Simple integration with Redis**  
-
-## 📜 License
-MIT
-
----
-
-💡 **Contributions and feedback are welcome!** 🚀
 
