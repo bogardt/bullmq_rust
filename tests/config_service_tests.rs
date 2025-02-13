@@ -1,5 +1,6 @@
 use bullmq_rust::config_service::ConfigService;
 
+/// Test the creation of ConfigService and validate its redis_url field.
 #[tokio::test]
 async fn test_config_service_creation() {
     let config_service = ConfigService {

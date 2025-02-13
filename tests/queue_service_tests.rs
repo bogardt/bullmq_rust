@@ -5,6 +5,7 @@ use chrono::Utc;
 mod mocks;
 use mocks::mocks::MockQueueService;
 
+/// Test adding and getting a job from the queue.
 #[tokio::test]
 async fn test_add_and_get_job() {
     let mut mock_queue_service = MockQueueService::new();
@@ -73,6 +74,7 @@ async fn test_add_and_get_job() {
     assert!(mock_queue_service.get_next_job("testQueue").await.is_err());
 }
 
+/// Test counting jobs in the queue.
 #[tokio::test]
 async fn test_count_jobs() {
     let mut mock_queue_service = MockQueueService::new();
@@ -102,6 +104,7 @@ async fn test_count_jobs() {
     assert!(mock_queue_service.count_jobs("testQueue").await.is_err());
 }
 
+/// Test updating and getting job progress.
 #[tokio::test]
 async fn test_update_and_get_job_progress() {
     let mut mock_queue_service = MockQueueService::new();
@@ -162,6 +165,7 @@ async fn test_update_and_get_job_progress() {
         .is_err());
 }
 
+/// Test moving a job to the failed state.
 #[tokio::test]
 async fn test_move_to_failed() {
     let mut mock_queue_service = MockQueueService::new();
@@ -206,6 +210,7 @@ async fn test_move_to_failed() {
         .is_err());
 }
 
+/// Test logging the status of a job.
 #[tokio::test]
 async fn test_log_job_status() {
     let mut mock_queue_service = MockQueueService::new();
@@ -250,6 +255,7 @@ async fn test_log_job_status() {
         .is_err());
 }
 
+/// Test adding a job to the queue.
 #[tokio::test]
 async fn test_add_job() {
     let mut mock_queue_service = MockQueueService::new();
@@ -265,7 +271,7 @@ async fn test_add_job() {
         progress: Some(0),
     };
 
-    // Définir l'attente pour la méthode add_job
+    // Define the expectation for the add_job method
     mock_queue_service
         .expect_add_job()
         .with(eq("testQueue"), eq(job.clone()))
@@ -276,6 +282,7 @@ async fn test_add_job() {
     assert!(result.is_ok());
 }
 
+/// Test getting the next job from the queue.
 #[tokio::test]
 async fn test_get_next_job() {
     let mut mock_queue_service = MockQueueService::new();
@@ -291,7 +298,7 @@ async fn test_get_next_job() {
         progress: Some(0),
     };
 
-    // Définir l'attente pour la méthode get_next_job
+    // Define the expectation for the get_next_job method
     mock_queue_service
         .expect_get_next_job()
         .with(eq("testQueue"))

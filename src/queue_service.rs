@@ -13,10 +13,24 @@ pub struct QueueService {
 }
 
 impl QueueService {
+    /// Creates a new `QueueService`.
+    ///
+    /// # Arguments
+    ///
+    /// * `conn` - The Redis connection.
+    ///
+    /// # Returns
+    ///
+    /// A new instance of `QueueService`.
     pub fn new(conn: redis::Connection) -> Self {
         Self { conn }
     }
 
+    /// Connects to the Redis server.
+    ///
+    /// # Returns
+    ///
+    /// A Redis connection.
     pub async fn connect() -> redis::Connection {
         let config = ConfigService::new();
         let redis_client = Arc::new(tokio::sync::Mutex::new(config.get_client().unwrap()));

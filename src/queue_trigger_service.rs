@@ -15,7 +15,6 @@ impl QueueTriggerService {
     /// # Arguments
     ///
     /// * `queue_name` - The name of the queue to monitor.
-    /// * `queue_service` - An `Arc` wrapped `QueueService` instance.
     ///
     /// # Returns
     ///
@@ -28,6 +27,10 @@ impl QueueTriggerService {
     ///
     /// This function spawns a new asynchronous task that continuously fetches
     /// and processes messages from the queue.
+    ///
+    /// # Arguments
+    ///
+    /// * `refresh_time_milli` - The time in milliseconds to wait before checking the queue again.
     pub async fn start(
         &self,
         refresh_time_milli: u64,
@@ -44,8 +47,8 @@ impl QueueTriggerService {
                 if let Ok(Some(job_json)) = queue_service.get_next_job(&queue_name).await {
                     let job: JobData = serde_json::from_str(&job_json).unwrap();
                     println!(
-                        "queue:\t\t{}\ntimestamp:\t{}\nmessage:\t{}",
-                        queue_name, job.timestamp, job.message
+                        "queue:\t\t{}\ntimestamp:\t{}\nid:\t\t{}\nmessage:\t{}",
+                        queue_name, job.timestamp, job.id, job.message
                     );
                 } else {
                     // println!("No jobs available, sleeping...");
