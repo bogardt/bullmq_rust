@@ -3,13 +3,14 @@ use tokio::sync::Mutex;
 use tokio::task;
 use serde_json;
 use chrono::Utc;
-use crate::queue_service::QueueService;
+// use crate::queue_service::RedisQueueService;
+use crate::QueueServiceTrait;
 use crate::job_model::JobData;
 
 /// Service responsible for managing workers that process jobs from a queue.
 pub struct WorkerService {
     queue_name: String,
-    queue_service: Arc<QueueService>,
+    queue_service: Arc<dyn QueueServiceTrait>,
 }
 
 impl WorkerService {
@@ -23,7 +24,7 @@ impl WorkerService {
     /// # Returns
     ///
     /// A new instance of `WorkerService`.
-    pub fn new(queue_name: String, queue_service: Arc<QueueService>) -> Self {
+    pub fn new(queue_name: String, queue_service: Arc<dyn QueueServiceTrait>) -> Self {
         Self { queue_name, queue_service }
     }
 

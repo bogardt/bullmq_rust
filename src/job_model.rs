@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-/// Represents the data of a job.
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct JobData {
     /// The message of the job.
     pub message: String,
