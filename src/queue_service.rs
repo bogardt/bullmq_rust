@@ -4,7 +4,6 @@ use std::sync::Arc;
 use tokio::sync::Mutex;
 use serde_json;
 use chrono::Utc;
-use crate::config_service::ConfigService;
 use crate::job_model::JobData;
 use crate::QueueServiceTrait;
 

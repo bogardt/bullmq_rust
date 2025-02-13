@@ -3,7 +3,6 @@ use tokio::sync::Mutex;
 use tokio::task;
 use serde_json;
 use chrono::Utc;
-// use crate::queue_service::RedisQueueService;
 use crate::QueueServiceTrait;
 use crate::job_model::JobData;
 

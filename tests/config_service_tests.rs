@@ -1,7 +1,4 @@
 use bullmq_rust::config_service::ConfigService;
-use redis::RedisResult;
-use mockall::predicate::*;
-use mockall::*;
 mod mocks;
 
 #[tokio::test]
