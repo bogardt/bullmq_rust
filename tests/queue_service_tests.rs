@@ -3,7 +3,7 @@ use bullmq_rust::QueueServiceTrait;
 use mockall::predicate::*;
 use chrono::Utc;
 mod mocks;
-use mocks::MockQueueService;
+use mocks::mocks::MockQueueService;
 
 #[tokio::test]
 async fn test_add_and_get_job() {

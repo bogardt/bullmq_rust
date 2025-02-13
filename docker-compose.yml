@@ -6,29 +6,7 @@ services:
       - "6379:6379"
     volumes:
       - redis-data:/data
-    #   - ./redis.conf:/usr/local/etc/redis/redis.conf
-    #   - ./redis-logs:/var/log/redis
-    command: ["redis-server", "--loglevel", "verbose"]
-    # command: ["redis-server", "--logfile", "/var/log/redis/redis.log", "--loglevel", "debug"]
-    # user: "1000:1000"  # Add this line to set the user permissions
-    # logging:
-    #   driver: "json-file"
-    #   options:
-    #     max-size: "10m"
-    #     max-file: "3"
-
-  # app:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   container_name: bullmq-rust-app
-  #   environment:
-  #     - REDIS_URL=redis://redis:6379
-  #   depends_on:
-  #     - redis
-  #   volumes:
-  #     - .:/usr/src/app
-  #   command: ["cargo", "run"]
+    command: ["redis-server", "--loglevel", "debug"]
 
 volumes:
   redis-data:

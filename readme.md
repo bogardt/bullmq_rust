@@ -22,23 +22,24 @@ Ensure you have **Rust** installed and **Redis** running locally or in the cloud
 cargo build
 ```
 
-Add the following dependencies to your `Cargo.toml`:
-```toml
-[dependencies]
-tokio = { version = "1", features = ["full"] }
-dotenv = "0.15"
-redis = "0.22"
-serde = { version = "1.0", features = ["derive"] }
-chrono = "0.4"
-```
-
 ## 🛠️ Configuration
 Create a `.env` file with Redis parameters:
 ```env
 REDIS_URL=redis://127.0.0.1:6379
+
+## 📖 Usage exemple
+1. start redis
+docker compose up -d
+
+2. Create a queue trigger service :
+```
+cargo run --bin queue_trigger 
 ```
 
-## 📖 Usage
+3. Push message to queue :
+```
+cargo run --bin push_message 
+```
 
 ### 1️⃣ Add a Job
 ```rust

@@ -1,26 +1,32 @@
 use async_trait::async_trait;
-use redis::{Client, Commands, RedisResult};
+use redis::{Commands, RedisResult};
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use serde_json;
 use chrono::Utc;
+use crate::config_service::ConfigService;
 use crate::job_model::JobData;
 use crate::QueueServiceTrait;
 
 /// Service responsible for managing a Redis queue.
-// #[derive(Clone)]
-pub struct QueueServcie {
-    client: Arc<Mutex<Client>>,
+pub struct QueueService {
+    conn: redis::Connection
 }
 
-impl QueueServcie {
-    pub fn new(client: Arc<Mutex<Client>>) -> Self {
-        Self { client }
+impl QueueService {
+    pub fn new(conn: redis::Connection) -> Self {
+        Self { conn }
+    }
+
+    pub async fn connect() -> redis::Connection {
+        let config = ConfigService::new();
+        let redis_client = Arc::new(tokio::sync::Mutex::new(config.get_client().unwrap()));
+        let conn = redis_client.lock().await.get_connection().unwrap();
+        conn
     }
 }
 
 #[async_trait]
-impl QueueServiceTrait for QueueServcie {
+impl QueueServiceTrait for QueueService {
     /// Adds a job to the specified queue.
     ///
     /// # Arguments
@@ -31,11 +37,10 @@ impl QueueServiceTrait for QueueServcie {
     /// # Returns
     ///
     /// A `RedisResult` indicating the success or failure of the operation.
-    async fn add_job(&self, queue_name: &str, job: JobData) -> RedisResult<()> {
-        let mut conn = self.client.lock().await.get_connection()?;
+    async fn add_job(&mut self, queue_name: &str, job: JobData) -> RedisResult<()> {
         let job_json = serde_json::to_string(&job).unwrap();
         let score = Utc::now().timestamp() + job.delay.unwrap_or(0);
-        let _: () = conn.zadd(queue_name, job_json, score)?;
+        let _: () = self.conn.zadd(queue_name, job_json, score)?;
         Ok(())
     }
 
@@ -48,9 +53,8 @@ impl QueueServiceTrait for QueueServcie {
     /// # Returns
     ///
     /// A `RedisResult` containing an optional job JSON string.
-    async fn get_next_job(&self, queue_name: &str) -> RedisResult<Option<String>> {
-        let mut conn = self.client.lock().await.get_connection()?;
-        let job: Option<(String, i64)> = conn.zpopmin(queue_name, 1)?;
+    async fn get_next_job(&mut self, queue_name: &str) -> RedisResult<Option<String>> {
+        let job: Option<(String, i64)> = self.conn.zpopmin(queue_name, 1)?;
         Ok(job.map(|(job, _)| job))
     }
 
@@ -63,9 +67,8 @@ impl QueueServiceTrait for QueueServcie {
     /// # Returns
     ///
     /// A `RedisResult` containing the number of jobs in the queue.
-    async fn count_jobs(&self, queue_name: &str) -> RedisResult<u64> {
-        let mut conn = self.client.lock().await.get_connection()?;
-        let count: u64 = conn.zcard(queue_name)?;
+    async fn count_jobs(&mut self, queue_name: &str) -> RedisResult<u64> {
+        let count: u64 = self.conn.zcard(queue_name)?;
         Ok(count)
     }
 
@@ -79,7 +82,7 @@ impl QueueServiceTrait for QueueServcie {
     /// # Returns
     ///
     /// A `RedisResult` indicating the success or failure of the operation.
-    async fn move_to_failed(&self, queue_name: &str, job: JobData) -> RedisResult<()> {
+    async fn move_to_failed(&mut self, queue_name: &str, job: JobData) -> RedisResult<()> {
         let failed_queue_name = format!("{}:failed", queue_name);
         self.add_job(&failed_queue_name, job).await
     }
@@ -95,11 +98,10 @@ impl QueueServiceTrait for QueueServcie {
     /// # Returns
     ///
     /// A `RedisResult` indicating the success or failure of the operation.
-    async fn log_job_status(&self, queue_name: &str, job: &JobData, status: &str) -> RedisResult<()> {
+    async fn log_job_status(&mut self, queue_name: &str, job: &JobData, status: &str) -> RedisResult<()> {
         let log_queue_name = format!("{}:log", queue_name);
         let log_entry = format!("{} - {}: {}", Utc::now().to_rfc3339(), status, job.message);
-        let mut conn = self.client.lock().await.get_connection()?;
-        let _: () = conn.lpush(log_queue_name, log_entry)?;
+        let _: () = self.conn.lpush(log_queue_name, log_entry)?;
         Ok(())
     }
 
@@ -114,10 +116,9 @@ impl QueueServiceTrait for QueueServcie {
     /// # Returns
     ///
     /// A `RedisResult` indicating the success or failure of the operation.
-    async fn update_job_progress(&self, queue_name: &str, job_id: &str, progress: u32) -> RedisResult<()> {
-        let mut conn = self.client.lock().await.get_connection()?;
+    async fn update_job_progress(&mut self, queue_name: &str, job_id: &str, progress: u32) -> RedisResult<()> {
         let job_key = format!("{}:{}", queue_name, job_id);
-        let _: () = conn.hset(job_key, "progress", progress)?;
+        let _: () = self.conn.hset(job_key, "progress", progress)?;
         Ok(())
     }
 
@@ -131,10 +132,9 @@ impl QueueServiceTrait for QueueServcie {
     /// # Returns
     ///
     /// A `RedisResult` containing the progress value of the job.
-    async fn get_job_progress(&self, queue_name: &str, job_id: &str) -> RedisResult<u32> {
-        let mut conn = self.client.lock().await.get_connection()?;
+    async fn get_job_progress(&mut self, queue_name: &str, job_id: &str) -> RedisResult<u32> {
         let job_key = format!("{}:{}", queue_name, job_id);
-        let progress: u32 = conn.hget(job_key, "progress")?;
+        let progress: u32 = self.conn.hget(job_key, "progress")?;
         Ok(progress)
     }
 }

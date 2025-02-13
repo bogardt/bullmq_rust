@@ -1,11 +1,9 @@
-use bullmq_rust::config_service::ConfigService;
 use bullmq_rust::job_model::JobData;
-use bullmq_rust::queue_service::QueueServcie;
+use bullmq_rust::queue_service::QueueService;
 use bullmq_rust::QueueServiceTrait;
 use chrono::Utc;
 use redis::RedisResult;
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
 
 #[derive(Serialize, Deserialize)]
 struct DataModel {
@@ -17,13 +15,9 @@ struct DataModel {
 
 #[tokio::main]
 async fn main() -> RedisResult<()> {
-    // Initialize the configuration service
-    let config = ConfigService::new();
-    let redis_client = Arc::new(tokio::sync::Mutex::new(config.get_client()?));
-
     // Create a new queue service instance
-    let redis_service =
-        Arc::new(QueueServcie::new(redis_client)) as Arc<dyn QueueServiceTrait>;
+    let conn = QueueService::connect().await;
+    let mut redis_service = QueueService::new(conn);
 
     let queue_name = "my_queue";
     

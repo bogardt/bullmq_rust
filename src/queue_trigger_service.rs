@@ -1,13 +1,12 @@
-use std::sync::Arc;
-use tokio::task;
-use serde_json;
-use crate::QueueServiceTrait;
 use crate::job_model::JobData;
+use crate::queue_service::QueueService;
+use crate::QueueServiceTrait;
+use serde_json;
+use tokio::task;
 
 /// Service responsible for triggering actions based on queue messages.
 pub struct QueueTriggerService {
     queue_name: String,
-    queue_service: Arc<dyn QueueServiceTrait>,
 }
 
 impl QueueTriggerService {
@@ -21,33 +20,37 @@ impl QueueTriggerService {
     /// # Returns
     ///
     /// A new instance of `QueueTriggerService`.
-    pub fn new(queue_name: String, queue_service: Arc<dyn QueueServiceTrait>) -> Self {
-        Self { queue_name, queue_service }
+    pub fn new(queue_name: String) -> Self {
+        Self { queue_name }
     }
 
     /// Starts the trigger to monitor the queue for messages.
     ///
     /// This function spawns a new asynchronous task that continuously fetches
     /// and processes messages from the queue.
-    pub async fn start(&self) {
-        let queue_name = self.queue_name.clone();
-        let queue_service = Arc::clone(&self.queue_service);
+    pub async fn start(
+        &self,
+        refresh_time_milli: u64,
+    ) {
+        // Create a new connection
+        let conn = QueueService::connect().await;
+    
+        // Create a new queue service instance
+        let mut queue_service = QueueService::new(conn);
 
+        let queue_name = self.queue_name.clone();
         task::spawn(async move {
             loop {
                 if let Ok(Some(job_json)) = queue_service.get_next_job(&queue_name).await {
                     let job: JobData = serde_json::from_str(&job_json).unwrap();
-                    println!("Triggered job: {} at {}", job.message, job.timestamp);
-
-                    // Process the job (this is where you would add your custom logic)
-                    // For now, we just print the job message
-                    println!("Processing job: {}", job.message);
-
-                    // Delete the job after processing
-                    println!("Deleting job: {}", job.message);
+                    println!(
+                        "queue:\t\t{}\ntimestamp:\t{}\nmessage:\t{}",
+                        queue_name, job.timestamp, job.message
+                    );
                 } else {
-                    println!("No jobs available, sleeping...");
-                    tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
+                    // println!("No jobs available, sleeping...");
+                    tokio::time::sleep(tokio::time::Duration::from_millis(refresh_time_milli))
+                        .await;
                 }
             }
         });
