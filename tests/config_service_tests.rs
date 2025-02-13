@@ -1,4 +1,5 @@
 use bullmq_rust::config_service::ConfigService;
+use mocks::MockRedisClient;
 mod mocks;
 
 #[tokio::test]
@@ -16,7 +17,10 @@ async fn test_config_service_creation() {
 
 // #[tokio::test]
 // async fn test_get_client() {
-//     let mut mock_config_service = MockConfigService::new();
+//     let config_service = ConfigService {
+//         redis_url: "redis://redis:6379".to_string(),
+//     };
+
 //     let mut mock_redis_client = MockRedisClient::new();
 
 //     // Successful case
@@ -25,12 +29,7 @@ async fn test_config_service_creation() {
 //         .times(1)
 //         .returning(|| Ok(()));
 
-//     mock_config_service
-//         .expect_get_client()
-//         .times(1)
-//         .returning(move || Ok(mock_redis_client.clone()));
-
-//     let client = mock_config_service.get_client().unwrap();
+//     let client = config_service.get_client().unwrap();
 //     assert!(client.get_connection().is_ok());
 
 //     // Failing case
@@ -44,11 +43,6 @@ async fn test_config_service_creation() {
 //             )))
 //         });
 
-//     mock_config_service
-//         .expect_get_client()
-//         .times(1)
-//         .returning(move || Ok(mock_redis_client.clone()));
-
-//     let client = mock_config_service.get_client().unwrap();
+//     let client = config_service.get_client().unwrap();
 //     assert!(client.get_connection().is_err());
 // }

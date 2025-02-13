@@ -10,6 +10,7 @@ async fn test_add_and_get_job() {
     let mut mock_queue_service = MockQueueService::new();
 
     let job = JobData {
+        id: "test_job".to_string(),
         message: "Test Job".to_string(),
         timestamp: Utc::now().to_rfc3339(),
         priority: Some(1),
@@ -165,6 +166,7 @@ async fn test_update_and_get_job_progress() {
 async fn test_move_to_failed() {
     let mut mock_queue_service = MockQueueService::new();
     let job = JobData {
+        id: "Failed Job".to_string(),
         message: "Failed Job".to_string(),
         timestamp: Utc::now().to_rfc3339(),
         priority: Some(1),
@@ -208,6 +210,7 @@ async fn test_move_to_failed() {
 async fn test_log_job_status() {
     let mut mock_queue_service = MockQueueService::new();
     let job = JobData {
+        id: "Log Job".to_string(),
         message: "Log Job".to_string(),
         timestamp: Utc::now().to_rfc3339(),
         priority: Some(1),
@@ -252,6 +255,7 @@ async fn test_add_job() {
     let mut mock_queue_service = MockQueueService::new();
 
     let job = JobData {
+        id: "test".to_string(),
         message: "test".to_string(),
         timestamp: Utc::now().to_rfc3339(),
         priority: Some(1),
@@ -277,6 +281,7 @@ async fn test_get_next_job() {
     let mut mock_queue_service = MockQueueService::new();
     let timestamp = Utc::now().to_rfc3339();
     let job = JobData {
+        id: "test".to_string(),
         message: "test".to_string(),
         timestamp: timestamp.clone(),
         priority: Some(1),
@@ -294,7 +299,7 @@ async fn test_get_next_job() {
         .returning(move |_| Ok(Some(serde_json::to_string(&job).unwrap())));
 
     let result = mock_queue_service.get_next_job("testQueue").await;
-    let attempt_string = format!("\"message\":\"test\",\"timestamp\":\"{}\",\"priority\":1,\"delay\":5,\"retries\":3,\"expires_in\":null,\"progress\":0", timestamp.clone());
+    let attempt_string = format!("\"id\":\"test\",\"message\":\"test\",\"timestamp\":\"{}\",\"priority\":1,\"delay\":5,\"retries\":3,\"expires_in\":null,\"progress\":0", timestamp.clone());
     assert!(result.is_ok());
     assert_eq!(result.unwrap(), Some("{".to_owned() + &attempt_string + "}"));
 }

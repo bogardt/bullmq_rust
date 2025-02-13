@@ -2,15 +2,19 @@ use bullmq_rust::config_service::ConfigService;
 use bullmq_rust::job_model::JobData;
 use bullmq_rust::queue_service::QueueServcie;
 use bullmq_rust::QueueServiceTrait;
-use bullmq_rust::queue_trigger_service::QueueTriggerService;
 use chrono::Utc;
 use redis::RedisResult;
+use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tokio::time::sleep;
-use std::time::Duration;
 
-/// This function initializes the configuration, queue service, and worker service.
-/// It adds a job to the queue and starts the worker to process jobs.
+#[derive(Serialize, Deserialize)]
+struct DataModel {
+    message_type: String,
+    message_content: String,
+    message_enum: i64
+}
+
+
 #[tokio::main]
 async fn main() -> RedisResult<()> {
     // Initialize the configuration service
@@ -22,12 +26,18 @@ async fn main() -> RedisResult<()> {
         Arc::new(QueueServcie::new(redis_client)) as Arc<dyn QueueServiceTrait>;
 
     let queue_name = "my_queue";
+    
+    let data_model = DataModel {
+        message_type: "TEST".to_string(),
+        message_content: "ContentTEST".to_string(),
+        message_enum: 3
+    };
 
     // Create a job and add it to the queue
     let job_id = "job_1".to_string();
     let job = JobData {
         id: job_id.clone(),
-        message: "Hello, world!".to_string(),
+        message: serde_json::to_string(&data_model).unwrap(),
         timestamp: Utc::now().to_rfc3339(),
         priority: Some(1),
         delay: Some(0),
@@ -41,17 +51,6 @@ async fn main() -> RedisResult<()> {
     } else {
         eprintln!("Succeeded to add {} to {}", job_id, queue_name);
     }
-
-    // Create queue trigger service
-    let queue_trigger = QueueTriggerService::new(queue_name.to_string(), redis_service.clone());
-
-    // Start queue trigger to monitor and process jobs
-    tokio::spawn(async move {
-        queue_trigger.start().await;
-    });
-
-    // Keep the main function alive
-    sleep(Duration::from_secs(60)).await;
 
     Ok(())
 }

@@ -8,7 +8,7 @@ services:
       - redis-data:/data
     #   - ./redis.conf:/usr/local/etc/redis/redis.conf
     #   - ./redis-logs:/var/log/redis
-    command: ["redis-server", "--loglevel", "debug"]
+    command: ["redis-server", "--loglevel", "verbose"]
     # command: ["redis-server", "--logfile", "/var/log/redis/redis.log", "--loglevel", "debug"]
     # user: "1000:1000"  # Add this line to set the user permissions
     # logging:
@@ -17,18 +17,18 @@ services:
     #     max-size: "10m"
     #     max-file: "3"
 
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: bullmq-rust-app
-    environment:
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-    volumes:
-      - .:/usr/src/app
-    command: ["cargo", "run"]
+  # app:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: bullmq-rust-app
+  #   environment:
+  #     - REDIS_URL=redis://redis:6379
+  #   depends_on:
+  #     - redis
+  #   volumes:
+  #     - .:/usr/src/app
+  #   command: ["cargo", "run"]
 
 volumes:
   redis-data:

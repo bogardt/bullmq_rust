@@ -2,6 +2,8 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct JobData {
+    /// The unique identifier of the job.
+    pub id: String,
     /// The message of the job.
     pub message: String,
     /// The timestamp when the job was created.

@@ -9,18 +9,18 @@ use crate::QueueServiceTrait;
 
 /// Service responsible for managing a Redis queue.
 // #[derive(Clone)]
-pub struct RedisQueueService {
+pub struct QueueServcie {
     client: Arc<Mutex<Client>>,
 }
 
-impl RedisQueueService {
+impl QueueServcie {
     pub fn new(client: Arc<Mutex<Client>>) -> Self {
         Self { client }
     }
 }
 
 #[async_trait]
-impl QueueServiceTrait for RedisQueueService {
+impl QueueServiceTrait for QueueServcie {
     /// Adds a job to the specified queue.
     ///
     /// # Arguments
