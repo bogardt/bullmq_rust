@@ -16,7 +16,6 @@ async fn main() -> RedisResult<()> {
     // Keep the main function alive
     // sleep(Duration::from_secs(60)).await;
 
-    while true {}
+    loop {}
 
-    Ok(())
 }

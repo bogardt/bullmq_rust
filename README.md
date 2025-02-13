@@ -13,6 +13,9 @@ This library is a modular **BullMQ-inspired** wrapper in **Rust**, allowing **qu
   ├── log_service.rs        # Logging service for job events
   ├── lib.rs                # Library module declarations
   ├── main.rs               # Application entry point
+/tests
+  ├── config_service_tests.rs # Tests for ConfigService
+  ├── mocks                 # Mock services for testing
 ```
 
 ## 🚀 Installation
@@ -26,10 +29,13 @@ cargo build
 Create a `.env` file with Redis parameters:
 ```env
 REDIS_URL=redis://127.0.0.1:6379
+```
 
-## 📖 Usage exemple
+## 📖 Usage Example
 1. start redis
+```
 docker compose up -d
+```
 
 2. Create a queue trigger service :
 ```
@@ -41,18 +47,22 @@ cargo run --bin queue_trigger
 cargo run --bin push_message 
 ```
 
+
+
 ### 1️⃣ Add a Job
 ```rust
-use queue_service::QueueService;
-use job_model::JobData;
+use bullmq_rust::queue_service::QueueService;
+use bullmq_rust::job_model::JobData;
+use bullmq_rust::config_service::ConfigService;
 use chrono::Utc;
 
 #[tokio::main]
 async fn main() {
     let config = ConfigService::new();
-    let queue_service = QueueService::new(&config).unwrap();
-    
+    let mut queue_service = QueueService::new(config.get_client().unwrap());
+
     let job = JobData {
+        id: "1".to_string(),
         message: "Hello, Rust!".to_string(),
         timestamp: Utc::now().to_rfc3339(),
         priority: Some(1),
@@ -61,7 +71,7 @@ async fn main() {
         expires_in: None,
         progress: Some(0),
     };
-    
+
     queue_service.add_job("testQueue", job).await.unwrap();
 }
 ```
@@ -69,14 +79,14 @@ async fn main() {
 ### 2️⃣ Start a Worker to Process Jobs
 ```rust
 use std::sync::Arc;
-use worker_service::WorkerService;
-use queue_service::QueueService;
-use config_service::ConfigService;
+use bullmq_rust::worker_service::WorkerService;
+use bullmq_rust::queue_service::QueueService;
+use bullmq_rust::config_service::ConfigService;
 
 #[tokio::main]
 async fn main() {
     let config = ConfigService::new();
-    let queue_service = Arc::new(QueueService::new(&config).unwrap());
+    let queue_service = Arc::new(QueueService::new(config.get_client().unwrap()));
     let worker = WorkerService::new("testQueue".to_string(), Arc::clone(&queue_service));
     worker.start().await;
 }
@@ -85,35 +95,19 @@ async fn main() {
 ### 3️⃣ Retry Failed Jobs
 ```rust
 use std::sync::Arc;
-use worker_service::WorkerService;
-use queue_service::QueueService;
-use config_service::ConfigService;
+use bullmq_rust::worker_service::WorkerService;
+use bullmq_rust::queue_service::QueueService;
+use bullmq_rust::config_service::ConfigService;
 
 #[tokio::main]
 async fn main() {
     let config = ConfigService::new();
-    let queue_service = Arc::new(QueueService::new(&config).unwrap());
+    let queue_service = Arc::new(QueueService::new(config.get_client().unwrap()));
     let worker = WorkerService::new("testQueue".to_string(), Arc::clone(&queue_service));
     worker.retry_failed_jobs().await;
 }
 ```
 
-### 4️⃣ Track Job Progress
-```rust
-use std::sync::Arc;
-use worker_service::WorkerService;
-use queue_service::QueueService;
-use config_service::ConfigService;
-
-#[tokio::main]
-async fn main() {
-    let config = ConfigService::new();
-    let queue_service = Arc::new(QueueService::new(&config).unwrap());
-    let worker = WorkerService::new("testQueue".to_string(), Arc::clone(&queue_service));
-    worker.start().await;
-    worker.retry_failed_jobs().await;
-}
-```
 
 ## 📜 Detailed Documentation
 
@@ -128,14 +122,14 @@ Manages Redis configuration.
 Manages queues and jobs in Redis.
 
 #### Methods:
-- `new(config: &ConfigService) -> RedisResult<Self>`: Creates a new `QueueService` instance.
-- `add_job(&self, queue_name: &str, job: JobData) -> RedisResult<()>`: Adds a job to the specified queue.
-- `get_next_job(&self, queue_name: &str) -> RedisResult<Option<String>>`: Retrieves the next job from the specified queue.
-- `count_jobs(&self, queue_name: &str) -> RedisResult<u64>`: Counts the number of jobs in the specified queue.
-- `move_to_failed(&self, queue_name: &str, job: JobData) -> RedisResult<()>`: Moves a job to the failed queue.
-- `log_job_status(&self, queue_name: &str, job: &JobData, status: &str) -> RedisResult<()>`: Logs the status of a job.
-- `update_job_progress(&self, queue_name: &str, job_id: &str, progress: u32) -> RedisResult<()>`: Updates the progress of a job.
-- `get_job_progress(&self, queue_name: &str, job_id: &str) -> RedisResult<u32>`: Retrieves the progress of a job.
+- `new(conn: redis::Connection) -> Self`: Creates a new `QueueService` instance.
+- `add_job(&mut self, queue_name: &str, job: JobData) -> RedisResult<()>`: Adds a job to the specified queue.
+- `get_next_job(&mut self, queue_name: &str) -> RedisResult<Option<String>>`: Retrieves the next job from the specified queue.
+- `count_jobs(&mut self, queue_name: &str) -> RedisResult<u64>`: Counts the number of jobs in the specified queue.
+- `move_to_failed(&mut self, queue_name: &str, job: JobData) -> RedisResult<()>`: Moves a job to the failed queue.
+- `log_job_status(&mut self, queue_name: &str, job: &JobData, status: &str) -> RedisResult<()>`: Logs the status of a job.
+- `update_job_progress(&mut self, queue_name: &str, job_id: &str, progress: u32) -> RedisResult<()>`: Updates the progress of a job.
+- `get_job_progress(&mut self, queue_name: &str, job_id: &str) -> RedisResult<u32>`: Retrieves the progress of a job.
 
 ### WorkerService
 Manages workers that process jobs from a queue.
@@ -156,6 +150,7 @@ Logs job events to Redis.
 Represents the data of a job.
 
 #### Fields:
+- `id: String`: The unique identifier of the job.
 - `message: String`: The message of the job.
 - `timestamp: String`: The timestamp when the job was created.
 - `priority: Option<i32>`: The priority of the job.
@@ -177,39 +172,6 @@ RUN apt-get update && apt-get install -y libssl-dev pkg-config
 RUN cargo build --release
 
 CMD ["cargo", "run"]
-```
-
-### docker-compose.yml
-```yaml
-services:
-  redis:
-    image: redis:latest
-    container_name: redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis-data:/data
-
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: bullmq-rust-app
-    environment:
-      - REDIS_URL=redis://redis:6379
-    depends_on:
-      - redis
-    volumes:
-      - .:/usr/src/app
-    command: ["cargo", "run"]
-
-volumes:
-  redis-data:
-```
-
-### .env.sample
-```env
-REDIS_URL=redis://localhost:6379
 ```
 
 ### .env
