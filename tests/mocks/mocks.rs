@@ -1,7 +1,5 @@
 use bullmq_rust::job_model::JobData;
 use redis::RedisResult;
-use bullmq_rust::QueueServiceTrait;
-use async_trait::async_trait;
 use mockall::*;
 
 mock! {
@@ -18,11 +16,7 @@ mock! {
 }
 
 mock! {
-    #[derive(Clone, DerefMut)]
-    pub QueueService {}
-
-    #[async_trait]
-    impl QueueServiceTrait for QueueService {
+    pub QueueService {
         /// Adds a job to the specified queue.
         ///
         /// # Arguments
@@ -33,7 +27,7 @@ mock! {
         /// # Returns
         ///
         /// A `RedisResult` indicating the success or failure of the operation.
-        async fn add_job(&mut self, queue_name: &str, job: JobData) -> RedisResult<()>;
+        pub async fn add_job(&mut self, queue_name: &str, job: JobData) -> RedisResult<()>;
 
         /// Retrieves the next job from the specified queue.
         ///
@@ -44,7 +38,7 @@ mock! {
         /// # Returns
         ///
         /// A `RedisResult` containing an optional job JSON string.
-        async fn get_next_job(&mut self, queue_name: &str) -> RedisResult<Option<String>>;
+        pub async fn get_next_job(&mut self, queue_name: &str) -> RedisResult<Option<Vec<String>>>;
 
         /// Counts the number of jobs in the specified queue.
         ///
@@ -55,7 +49,7 @@ mock! {
         /// # Returns
         ///
         /// A `RedisResult` containing the number of jobs in the queue.
-        async fn count_jobs(&mut self, queue_name: &str) -> RedisResult<u64>;
+        pub async fn count_jobs(&mut self, queue_name: &str) -> RedisResult<u64>;
 
         /// Updates the progress of a job.
         ///
@@ -68,7 +62,7 @@ mock! {
         /// # Returns
         ///
         /// A `RedisResult` indicating the success or failure of the operation.
-        async fn update_job_progress(&mut self, queue_name: &str, job_id: &str, progress: u32) -> RedisResult<()>;
+        pub async fn update_job_progress(&mut self, queue_name: &str, job_id: &str, progress: u32) -> RedisResult<()>;
 
         /// Retrieves the progress of a job.
         ///
@@ -80,7 +74,7 @@ mock! {
         /// # Returns
         ///
         /// A `RedisResult` containing the progress value of the job.
-        async fn get_job_progress(&mut self, queue_name: &str, job_id: &str) -> RedisResult<u32>;
+        pub async fn get_job_progress(&mut self, queue_name: &str, job_id: &str) -> RedisResult<u32>;
 
         /// Moves a job to the failed queue.
         ///
@@ -92,7 +86,7 @@ mock! {
         /// # Returns
         ///
         /// A `RedisResult` indicating the success or failure of the operation.
-        async fn move_to_failed(&mut self, queue_name: &str, job: JobData) -> RedisResult<()>;
+        pub async fn move_to_failed(&mut self, queue_name: &str, job: JobData) -> RedisResult<()>;
 
         /// Logs the status of a job.
         ///
@@ -105,6 +99,6 @@ mock! {
         /// # Returns
         ///
         /// A `RedisResult` indicating the success or failure of the operation.
-        async fn log_job_status(&mut self, queue_name: &str, job: &JobData, status: &str) -> RedisResult<()>;
+        pub async fn log_job_status(&mut self, queue_name: &str, job: &JobData, status: &str) -> RedisResult<()>;
     }
 }

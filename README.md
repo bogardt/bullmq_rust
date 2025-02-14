@@ -160,19 +160,6 @@ Represents the data of a job.
 - `progress: Option<u32>`: The progress of the job.
 
 ## 🐳 Docker Setup
-### Dockerfile
-```dockerfile
-FROM rust:latest
-
-WORKDIR /usr/src/app
-
-COPY . .
-
-RUN apt-get update && apt-get install -y libssl-dev pkg-config
-RUN cargo build --release
-
-CMD ["cargo", "run"]
-```
 
 ### .env
 ```env

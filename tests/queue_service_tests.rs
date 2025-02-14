@@ -1,5 +1,4 @@
 use bullmq_rust::job_model::JobData;
-use bullmq_rust::QueueServiceTrait;
 use mockall::predicate::*;
 use chrono::Utc;
 mod mocks;
@@ -33,7 +32,7 @@ async fn test_add_and_get_job() {
         .times(1)
         .returning({
             let job = job.clone();
-            move |_| Ok(Some(serde_json::to_string(&job).unwrap()))
+            move |_| Ok(Some(vec![serde_json::to_string(&job).unwrap()]))
         });
 
     mock_queue_service
@@ -42,7 +41,7 @@ async fn test_add_and_get_job() {
         .unwrap();
     let fetched_job = mock_queue_service.get_next_job("testQueue").await.unwrap();
     assert!(fetched_job.is_some());
-    let fetched_job: JobData = serde_json::from_str(&fetched_job.unwrap()).unwrap();
+    let fetched_job: JobData = serde_json::from_str(&fetched_job.unwrap()[0]).unwrap();
     assert_eq!(fetched_job.message, job.message);
 
     // Failing case
@@ -303,10 +302,10 @@ async fn test_get_next_job() {
         .expect_get_next_job()
         .with(eq("testQueue"))
         .times(1)
-        .returning(move |_| Ok(Some(serde_json::to_string(&job).unwrap())));
+        .returning(move |_| Ok(Some(vec![serde_json::to_string(&job).unwrap()])));
 
     let result = mock_queue_service.get_next_job("testQueue").await;
     let attempt_string = format!("\"id\":\"test\",\"message\":\"test\",\"timestamp\":\"{}\",\"priority\":1,\"delay\":5,\"retries\":3,\"expires_in\":null,\"progress\":0", timestamp.clone());
     assert!(result.is_ok());
-    assert_eq!(result.unwrap(), Some("{".to_owned() + &attempt_string + "}"));
+    assert_eq!(result.unwrap().unwrap()[0], "{".to_owned() + &attempt_string + "}");
 }

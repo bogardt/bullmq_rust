@@ -37,7 +37,7 @@ pub trait QueueServiceTrait: Send + Sync {
     /// # Returns
     ///
     /// A `RedisResult` containing an optional job JSON string.
-    async fn get_next_job(&mut self, queue_name: &str) -> RedisResult<Option<String>>;
+    async fn get_next_job(&mut self, queue_name: &str) -> RedisResult<Option<Vec<String>>>;
 
     /// Counts the number of jobs in the specified queue.
     ///
